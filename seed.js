@@ -14,11 +14,19 @@ const games = [
 const seedGames = async () => {
   try {
     await connectDB();
-    await Game.deleteMany({});
+
+    const collections = await mongoose.connection.db.listCollections({ name: 'games' }).toArray();
+    if (collections.length > 0) {
+      await Game.deleteMany({});
+    }
+
     await Game.insertMany(games);
-    await mongoose.disconnect();
+
+    console.log('Seed completada correctamente');
   } catch (error) {
     console.error(error);
+  } finally {
+    await mongoose.disconnect();
   }
 };
 

@@ -22,8 +22,15 @@ API REST construida con Node.js, Express y MongoDB que permite gestionar usuario
 * `POST /api/users/register`: Registro con imagen (form-data).
 * `POST /api/users/login`: Login para obtener el Token.
 * `GET /api/users`: Lista de usuarios (Solo Admin).
+* `GET /api/users/:id`: Obtener usuario por ID (Admin o dueño del usuario).
+* `PUT /api/users/:id`: Actualizar usuario (Admin o dueño, sin escalado de rol).
+* `PUT /api/users/role/:id`: Actualizar rol de usuario (Solo Admin).
+* `DELETE /api/users/:id`: Eliminar usuario (Admin o dueño del usuario).
 * `POST /api/users/favorites`: Añadir juego a favoritos (Requiere Token).
 
 ### Juegos
 * `GET /api/games`: Lista todos los juegos.
+* `GET /api/games/:id`: Obtener juego por ID.
 * `POST /api/games`: Crear nuevo juego (Solo Admin).
+* `PUT /api/games/:id`: Actualizar juego (Solo Admin).
+* `DELETE /api/games/:id`: Eliminar juego (Solo Admin).

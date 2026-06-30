@@ -6,13 +6,17 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   image: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  favorites: [{ type: mongoose.Types.ObjectId, ref: 'Game' }]
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Game' }]
 }, { timestamps: true });
 
-userSchema.pre('save', function() {
-  if (this.isModified('password')) {
-    this.password = bcrypt.hashSync(this.password, 10);
-  }
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password')) return next();
+
+  // Evita doble hasheo cuando el password ya viene cifrado.
+  if (typeof this.password === 'string' && this.password.startsWith('$2')) return next();
+
+  this.password = bcrypt.hashSync(this.password, 10);
+  return next();
 });
 
 module.exports = mongoose.model('User', userSchema);
