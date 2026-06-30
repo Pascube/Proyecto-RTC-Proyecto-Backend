@@ -39,6 +39,23 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (req.user.role !== 'admin' && req.user._id.toString() !== id) {
+      return res.status(403).json('No tienes permiso para ver este usuario');
+    }
+
+    const user = await User.findById(id).populate('favorites');
+    if (!user) return res.status(404).json('Usuario no encontrado');
+
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,8 +120,27 @@ const updateUser = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json('Usuario no encontrado');
 
+    // Evita que un usuario se escale privilegios a admin por esta ruta.
+    if (Object.prototype.hasOwnProperty.call(req.body, 'role') && req.user.role !== 'admin') {
+      return res.status(403).json('No tienes permiso para actualizar el rol');
+    }
+
     Object.assign(user, req.body);
-    if (req.file) user.image = req.file.path;
+
+    if (req.user.role !== 'admin') {
+      user.role = 'user';
+    }
+
+    if (req.file) {
+      if (user.image) {
+        const imgSplitted = user.image.split('/');
+        const nameSplitted = imgSplitted[imgSplitted.length - 1].split('.');
+        const folder = imgSplitted[imgSplitted.length - 2];
+        const public_id = `${folder}/${nameSplitted[0]}`;
+        await cloudinary.uploader.destroy(public_id);
+      }
+      user.image = req.file.path;
+    }
 
     const updatedUser = await user.save();
     return res.status(200).json(updatedUser);
@@ -117,6 +153,7 @@ module.exports = {
   register, 
   login, 
   getUsers, 
+  getUserById,
   deleteUser, 
   addFavorite, 
   updateRole,
